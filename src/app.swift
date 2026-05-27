@@ -234,6 +234,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, NSWi
 
     func startServer() {
         let appDir = Bundle.main.bundlePath + "/Contents/MacOS"
+
+        // 清理上次未正常退出时遗留的 node 进程（bash→node 链路中 terminate() 只杀 bash，node 仍占用端口）
+        let cleanup = Process()
+        cleanup.executableURL = URL(fileURLWithPath: "/bin/bash")
+        cleanup.arguments = ["-c", "lsof -ti:9528 | xargs kill -9 2>/dev/null"]
+        cleanup.standardOutput = FileHandle.nullDevice
+        cleanup.standardError = FileHandle.nullDevice
+        try? cleanup.run()
+        cleanup.waitUntilExit()
+
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/bash")
         process.arguments = ["-c", "cd '\(appDir)' && node server.js"]
