@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin: 0; padding: 0; }
+html, body { background: transparent; overflow: hidden; user-select: none; -webkit-user-select: none; width: 140px; height: 280px; }
+::-webkit-scrollbar { display: none; }
+
+#wrap {
+  position: relative;
+  width: 140px;
+  height: 280px;
+  perspective: 400px;
+}
+#kitty-container {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  width: 72px;
+  height: 120px;
+  transform: translateX(-50%);
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+}
+.kitty-img {
+  width: 72px;
+  height: 120px;
+  background: transparent;
+  -webkit-user-drag: none;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.18));
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+.zone {
+  position: absolute;
+  z-index: 6;
+  cursor: pointer;
+}
+#zone-head {
+  top: 0; left: 0;
+  width: 72px; height: 54px;
+}
+#zone-hand-left {
+  top: 54px; left: 0;
+  width: 16px; height: 30px;
+}
+#zone-body {
+  top: 54px; left: 16px;
+  width: 40px; height: 30px;
+}
+#zone-hand-right {
+  top: 54px; right: 0;
+  width: 16px; height: 30px;
+}
+#zone-feet {
+  bottom: 0; left: 0;
+  width: 72px; height: 36px;
+}
+#kitty-click {
+  position: absolute;
+  top: 0; left: 0;
+  width: 72px;
+  height: 120px;
+  cursor: pointer;
+  z-index: 5;
+}
+#shadow {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 10px;
+  background: radial-gradient(ellipse, rgba(0,0,0,0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  transition: all 0.5s ease;
+}
+
+.anim-idle .kitty-img {
+  animation: idleBody 4s ease-in-out infinite;
+}
+@keyframes idleBody {
+  0%, 100% { transform: translateY(0) rotateY(0deg) rotateX(0deg) translateZ(0); }
+  20%  { transform: translateY(-2px) rotateY(5deg) rotateX(-2deg) translateZ(3px); }
+  40%  { transform: translateY(-4px) rotateY(0deg) rotateX(1deg) translateZ(5px); }
+  60%  { transform: translateY(-2px) rotateY(-5deg) rotateX(-1deg) translateZ(3px); }
+  80%  { transform: translateY(-1px) rotateY(-2deg) rotateX(2deg) translateZ(1px); }
+}
+
+.anim-walk .kitty-img {
+  visibility: hidden;
+}
+.anim-walk .walk-sprite {
+  display: block;
+}
+.walk-sprite {
+  display: none;
+  position: absolute;
+  top: 0; left: 0;
+  width: 72px;
+  height: 120px;
+  background: url('/walk_sprite.png') 0 0 no-repeat;
+  background-size: 864px 120px;
+  animation: walkSprite 1s steps(12) infinite;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.18));
+}
+.anim-walk #shadow {
+  animation: shadowStep 0.5s ease-in-out infinite;
+}
+@keyframes walkSprite {
+  from { background-position: 0 0; }
+  to { background-position: -864px 0; }
+}
+@keyframes shadowStep {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.5; }
+  25%  { transform: translateX(-55%) scale(0.8); opacity: 0.3; }
+  50%  { transform: translateX(-50%) scale(1.05); opacity: 0.55; }
+  75%  { transform: translateX(-45%) scale(0.8); opacity: 0.3; }
+}
+
+.anim-dance .kitty-img {
+  animation: danceBody 2.2s ease;
+}
+@keyframes danceBody {
+  0%   { transform: translateY(0) rotate(0deg) scale(1) skewX(0deg); }
+  10%  { transform: translateY(-12px) rotate(-8deg) scale(1.05) skewX(-3deg); }
+  20%  { transform: translateY(-2px) rotate(8deg) scale(0.95) skewX(3deg); }
+  30%  { transform: translateY(-14px) rotate(-10deg) scale(1.08) skewX(-4deg); }
+  40%  { transform: translateY(0) rotate(6deg) scale(0.96) skewX(2deg); }
+  50%  { transform: translateY(-10px) rotate(-6deg) scale(1.04) skewX(-2deg); }
+  60%  { transform: translateY(-4px) rotate(10deg) scale(1.02) skewX(3deg); }
+  70%  { transform: translateY(-8px) rotate(-4deg) scale(1.06) skewX(-1deg); }
+  85%  { transform: translateY(-2px) rotate(2deg) scale(1.01) skewX(0deg); }
+  100% { transform: translateY(0) rotate(0deg) scale(1) skewX(0deg); }
+}
+
+.anim-spin .kitty-img {
+  animation: spin3d 1s ease-in-out;
+}
+@keyframes spin3d {
+  0%   { transform: rotate(0deg) scale(1); }
+  25%  { transform: rotate(90deg) scale(0.9); }
+  50%  { transform: rotate(180deg) scale(0.85); }
+  75%  { transform: rotate(270deg) scale(0.9); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.anim-jump .kitty-img {
+  animation: jumpBody 0.8s ease;
+}
+@keyframes jumpBody {
+  0%   { transform: translateY(0) rotateX(0) translateZ(0); }
+  15%  { transform: translateY(3px) rotateX(6deg) translateZ(-2px); }
+  40%  { transform: translateY(-28px) rotateX(-10deg) translateZ(10px); }
+  60%  { transform: translateY(-22px) rotateX(-5deg) translateZ(6px); }
+  85%  { transform: translateY(2px) rotateX(3deg) translateZ(-1px); }
+  100% { transform: translateY(0) rotateX(0) translateZ(0); }
+}
+
+.anim-bounce .kitty-img {
+  animation: bounce3d 0.5s ease;
+}
+@keyframes bounce3d {
+  0%   { transform: scale(1) rotateY(0) translateY(0) translateZ(0); }
+  20%  { transform: scale(1.18) rotateY(15deg) translateY(-10px) translateZ(8px); }
+  40%  { transform: scale(0.9) rotateY(-8deg) translateY(0) translateZ(-3px); }
+  60%  { transform: scale(1.08) rotateY(5deg) translateY(-4px) translateZ(4px); }
+  100% { transform: scale(1) rotateY(0) translateY(0) translateZ(0); }
+}
+
+.anim-sleep .kitty-img {
+  visibility: hidden;
+}
+.anim-sleep .sleep-sprite {
+  display: block;
+}
+.sleep-sprite {
+  display: none;
+  position: absolute;
+  top: 10px; left: -4px;
+  width: 80px;
+  height: 92px;
+  background: url('/sleep_sprite.png') 0 0 no-repeat;
+  background-size: 480px 92px;
+  animation: sleepSprite 3s steps(6) infinite;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.18));
+}
+.anim-sleep #shadow {
+  transform: translateX(-50%) scale(1.1);
+  opacity: 0.5;
+}
+@keyframes sleepSprite {
+  from { background-position: 0 0; }
+  to { background-position: -480px 0; }
+}
+
+.anim-ballet .kitty-img {
+  visibility: hidden;
+}
+.anim-ballet .ballet-sprite {
+  display: block;
+}
+.ballet-sprite {
+  display: none;
+  position: absolute;
+  top: -20px; left: 0;
+  width: 72px;
+  height: 144px;
+  background: url('/ballet_sprite.png') 0 0 no-repeat;
+  background-size: 1080px 144px;
+  animation: balletSpin 2.5s steps(15) infinite;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.18));
+}
+@keyframes balletSpin {
+  from { background-position: 0 0; }
+  to { background-position: -1080px 0; }
+}
+
+.anim-rest .kitty-img {
+  animation: restBody 4s ease-in-out infinite;
+}
+.anim-rest #shadow {
+  transform: translateX(-50%) scale(1.3) scaleY(1.2);
+  opacity: 0.4;
+}
+@keyframes restBody {
+  0%, 100% { transform: rotateX(8deg) translateY(3px); }
+  50%  { transform: rotateX(10deg) translateY(4px); }
+}
+
+.anim-typing .kitty-img {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  animation: typingBody 0.4s ease-in-out infinite;
+}
+.anim-typing #shadow {
+  transform: translateX(-50%) scale(1.05);
+  opacity: 0.5;
+}
+@keyframes typingBody {
+  0%, 100% { transform: translateY(0) rotateX(3deg) rotateZ(0deg); }
+  25%  { transform: translateY(-1px) rotateX(5deg) rotateZ(-1deg); }
+  50%  { transform: translateY(0) rotateX(3deg) rotateZ(0deg); }
+  75%  { transform: translateY(-1px) rotateX(5deg) rotateZ(1deg); }
+}
+
+.face-left .kitty-img { transform: scaleX(-1); }
+#kitty-container.peek-right { transform: translateX(-50%) scaleX(-1) rotate(-15deg); }
+#kitty-container.peek-left  { transform: translateX(-50%) rotate(-15deg); }
+
+.bubble {
+  position: absolute;
+  bottom: 135px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 2px solid #e75480;
+  border-radius: 14px;
+  padding: 5px 10px;
+  font-size: 10px;
+  line-height: 1.4;
+  font-family: -apple-system, 'PingFang SC', sans-serif;
+  color: #e75480;
+  font-weight: 500;
+  white-space: normal;
+  max-width: 130px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  pointer-events: none;
+  animation: bubbleIn 0.3s ease forwards;
+  z-index: 10;
+}
+.bubble.out { animation: bubbleOut 0.3s ease forwards; }
+.bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px; left: 50%; margin-left: -5px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 8px solid #e75480;
+}
+.bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -5px; left: 50%; margin-left: -4px;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 6px solid #fff;
+  z-index: 1;
+}
+@keyframes bubbleIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.8); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+@keyframes bubbleOut {
+  from { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateX(-50%) translateY(-8px) scale(0.8); }
+}
+
+.zzz {
+  position: absolute;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: -apple-system, sans-serif;
+  color: #e75480;
+  opacity: 0;
+  pointer-events: none;
+  animation: zzzFloat 2s ease-out forwards;
+  z-index: 10;
+}
+@keyframes zzzFloat {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.6) rotate(0deg); }
+  15%  { opacity: 0.8; }
+  50%  { opacity: 0.6; transform: translate(12px, -18px) scale(0.9) rotate(-8deg); }
+  100% { opacity: 0; transform: translate(22px, -35px) scale(1.1) rotate(-15deg); }
+}
+
+.dust {
+  position: absolute;
+  bottom: 12px;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.15);
+  animation: dustPuff 0.4s ease forwards;
+  pointer-events: none;
+}
+@keyframes dustPuff {
+  from { opacity: 0.6; transform: scale(1) translateY(0); }
+  to   { opacity: 0; transform: scale(2.5) translateY(-6px); }
+}
+
+#ctx {
+  display: none; position: fixed; z-index: 999;
+  display: none; flex-direction: column; gap: 3px;
+}
+#ctx div {
+  background: #fff; border: 1.5px solid #e75480; border-radius: 12px;
+  padding: 3px 8px; font-size: 9px; color: #e75480;
+  cursor: pointer; font-family: -apple-system, 'PingFang SC', sans-serif;
+  white-space: nowrap; text-align: center;
+}
+#ctx div:hover { background: #e75480; color: #fff; }
+
+#chat-options {
+  display: none; position: absolute; bottom: 2px; left: 50%;
+  transform: translateX(-50%); z-index: 20;
+  display: none; flex-wrap: wrap; gap: 4px; justify-content: center;
+  width: 150px;
+}
+#chat-options span {
+  background: #fff; border: 1.5px solid #e75480; border-radius: 12px;
+  padding: 3px 10px; font-size: 11px; color: #e75480; cursor: pointer;
+  font-family: -apple-system, 'PingFang SC', sans-serif;
+  white-space: nowrap; transition: all 0.15s;
+}
+#chat-options span:hover { background: #e75480; color: #fff; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="kitty-container" class="anim-idle">
+    <img class="kitty-img" src="/default.png" draggable="false">
+    <div class="walk-sprite"></div>
+    <div class="sleep-sprite"></div>
+    <div class="ballet-sprite"></div>
+    <div id="kitty-click"></div>
+    <div id="zone-head" class="zone"></div>
+    <div id="zone-hand-left" class="zone"></div>
+    <div id="zone-body" class="zone"></div>
+    <div id="zone-hand-right" class="zone"></div>
+    <div id="zone-feet" class="zone"></div>
+    <div id="shadow"></div>
+  </div>
+</div>
+<div id="ctx">
+  <div id="ctxChat">聊天</div>
+  <div id="ctxBallet">跳芭蕾舞</div>
+  <div id="ctxSleep">睡觉</div>
+  <div id="ctxBig">变大</div>
+  <div id="ctxWater">喝水提醒</div>
+  <div id="ctxQuit">退出</div>
+</div>
+<div id="chat-options">
+  <span data-key="累">累</span>
+  <span data-key="饿了">饿了</span>
+  <span data-key="无聊">无聊</span>
+  <span data-key="开心">开心</span>
+  <span data-key="天气">天气</span>
+</div>
+<script>
+const kc = document.getElementById('kitty-container');
+const click = document.getElementById('kitty-click');
+const wrap = document.getElementById('wrap');
+const ctx = document.getElementById('ctx');
+const msg = (a, o) => { try { window.webkit.messageHandlers.petWindow.postMessage(Object.assign({action:a}, o||{})); } catch(_){} };
+
+const BASE_MESSAGES = [
+  '今天也要加油~', '记得喝水呀！', '工作辛苦啦~',
+  '要按时下班哦', '你好棒！',
+  '困了就休息下~', '摸摸头~', '❤️',
+  '今天吃什么呢', '该站起来走走了',
+  '嘿嘿~', '喵~', '想你了~',
+  '打工人打工魂~', '今天也是元气满满的牛马！',
+  '老板的饼画好了吗？', '摸鱼一时爽，一直摸一直爽~',
+  '上班如上坟，心情很沉闷', '工资是不会变的，但头发会~',
+  '今天的班值1000万！（精神胜利法）',
+  '干不完的活，叹不完的气~', '你在工位上已经坐了好久了！',
+  '月薪3千操着3亿的心~', '打工人的眼泪不会掉在工位上',
+  '没事，还有明天可以继续卷~', '脆皮打工人今天没碎吧？',
+  '再卷一会儿就下班了！', '别焦虑，你又不是第一天穷了',
+  '当代牛马，精神状态遥遥领先', '先活着，其他的再说',
+  '今日份KPI完成了吗~', '外面的阳光和你没关系~',
+  '咖啡续命中...', '不是我不努力，是椅子太舒服了',
+  '偷感好重，假装在忙', '你看起来需要一杯奶茶',
+  '我在精神上已经下班了', '又是在工位上浪费生命的一天~',
+];
+const DAY_MESSAGES = {
+  1: ['周一加油，新的一周~'],
+  2: ['周二啦，继续努力~'],
+  3: ['周三，一半啦！'],
+  4: ['周四了，快熬出头了~'],
+  5: ['周五啦！马上周末~', '今天结束就放假啦~'],
+};
+const MESSAGES = BASE_MESSAGES.concat(DAY_MESSAGES[new Date().getDay()] || []);
+
+let weatherMsg = '';
+function fetchWeather() {
+  fetch('/api/weather').then(r => r.json()).then(data => {
+    if (data.weather) weatherMsg = '杭州: ' + data.weather.replace('+','');
+  }).catch(() => {});
+}
+fetchWeather();
+setInterval(fetchWeather, 3600000);
+
+function getRandomMessage() {
+  const all = MESSAGES.slice();
+  if (weatherMsg) all.push(weatherMsg);
+  return all[Math.floor(Math.random() * all.length)];
+}
+
+let state = 'idle';
+let facing = 'right';
+let peekDir = null;
+let walkTimer = null;
+let dustTimer = null;
+let walkDir = 1;
+let bubbleEl = null;
+let idleTimer = null;
+let zzzTimer = null;
+let hoverActive = false;
+let sleepTimeout = null;
+const SLEEP_DELAY = 30000;
+
+function resetSleepTimer() {
+  if (sleepTimeout) clearTimeout(sleepTimeout);
+  sleepTimeout = setTimeout(() => {
+    if (state !== 'typing' && state !== 'peek') enterSleep();
+  }, SLEEP_DELAY);
+}
+
+function enterSleep() {
+  stopWalking();
+  clearIdleTimer();
+  state = 'sleep';
+  setClass('anim-sleep');
+  startZzz();
+}
+
+function getDefaultImg() {
+  return getCurrentOutfit().img + '?t=' + Date.now();
+}
+
+function wakeUp() {
+  stopZzz();
+  kc.querySelector('.kitty-img').src = getDefaultImg();
+  setAnimState('idle');
+  resetSleepTimer();
+}
+
+function setClass(animClass) {
+  kc.className = animClass;
+  const img = kc.querySelector('.kitty-img');
+  const walkSprite = kc.querySelector('.walk-sprite');
+  img.style.animation = 'none';
+  img.offsetHeight;
+  img.style.animation = '';
+  if (facing === 'left') {
+    img.style.transform = 'scaleX(-1)';
+    walkSprite.style.transform = 'scaleX(-1)';
+  } else {
+    img.style.transform = '';
+    walkSprite.style.transform = '';
+  }
+}
+
+function startZzz() {
+  stopZzz();
+  spawnZ();
+  zzzTimer = setInterval(spawnZ, 1500);
+}
+function stopZzz() {
+  if (zzzTimer) { clearInterval(zzzTimer); zzzTimer = null; }
+  wrap.querySelectorAll('.zzz').forEach(el => el.remove());
+}
+function spawnZ() {
+  const z = document.createElement('div');
+  z.className = 'zzz';
+  z.textContent = 'z';
+  z.style.left = '75px';
+  z.style.bottom = '100px';
+  z.style.fontSize = (10 + Math.random() * 6) + 'px';
+  wrap.appendChild(z);
+  setTimeout(() => z.remove(), 2000);
+}
+
+function spawnDust() {
+  const d = document.createElement('div');
+  d.className = 'dust';
+  d.style.left = (55 + Math.random() * 30) + 'px';
+  kc.appendChild(d);
+  setTimeout(() => d.remove(), 400);
+}
+function startWalking() {
+  stopWalking();
+  walkTimer = setInterval(() => { msg('move', { dx: walkDir * 1.5 }); }, 33);
+  dustTimer = setInterval(spawnDust, 220);
+  setTimeout(() => {
+    if (state === 'walking') { stopWalking(); setAnimState('idle'); }
+  }, 3000);
+}
+function stopWalking() {
+  if (walkTimer) { clearInterval(walkTimer); walkTimer = null; }
+  if (dustTimer) { clearInterval(dustTimer); dustTimer = null; }
+}
+
+function setAnimState(s) {
+  if (peekDir) return;
+  clearIdleTimer();
+  stopZzz();
+  state = s;
+
+  if (s === 'idle') {
+    setClass('anim-idle');
+    if (!hoverActive) scheduleIdle();
+  } else if (s === 'walking') {
+    walkDir = Math.random() > 0.5 ? 1 : -1;
+    facing = walkDir > 0 ? 'right' : 'left';
+    setClass('anim-walk');
+    startWalking();
+  } else if (s === 'dance') {
+    setClass('anim-dance');
+    setTimeout(() => { if (state === 'dance' && !hoverActive) setAnimState('idle'); }, 2200);
+  } else if (s === 'spin') {
+    setClass('anim-spin');
+    setTimeout(() => { if (state === 'spin') setAnimState('idle'); }, 1000);
+  } else if (s === 'jump') {
+    setClass('anim-jump');
+    setTimeout(() => { if (state === 'jump') setAnimState('idle'); }, 800);
+  } else if (s === 'bounce') {
+    setClass('anim-bounce');
+    setTimeout(() => { if (state === 'bounce') setAnimState('idle'); }, 500);
+  } else if (s === 'sleep') {
+    setClass('anim-sleep');
+    startZzz();
+    if (!hoverActive) scheduleIdle();
+  } else if (s === 'rest') {
+    setClass('anim-rest');
+    if (!hoverActive) scheduleIdle();
+  } else if (s === 'typing') {
+    kc.querySelector('.kitty-img').src = '/typing.png?t=' + Date.now();
+    setClass('anim-typing');
+  } else if (s === 'ballet') {
+    setClass('anim-ballet');
+    const spriteEl = kc.querySelector('.ballet-sprite');
+    spriteEl.style.animation = 'none';
+    spriteEl.offsetHeight;
+    spriteEl.style.animation = '';
+  }
+}
+
+function clearIdleTimer() {
+  if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+}
+function scheduleIdle() {
+  clearIdleTimer();
+  idleTimer = setTimeout(randomIdleAction, 5000 + Math.random() * 6000);
+}
+function randomIdleAction() {
+  if (peekDir || hoverActive || state === 'sleep') return;
+  const r = Math.random();
+  if (r < 0.35) { showBubble(); scheduleIdle(); }
+  else if (r < 0.55) { setAnimState('rest'); }
+  else { setAnimState('idle'); }
+}
+
+// --- Hover zones ---
+document.getElementById('zone-feet').addEventListener('mouseenter', () => {
+  hoverActive = true;
+  if (state === 'sleep') wakeUp();
+  stopZzz();
+  setAnimState('walking');
+  resetSleepTimer();
+});
+document.getElementById('zone-feet').addEventListener('mouseleave', () => {
+  hoverActive = false;
+  if (state === 'walking') { stopWalking(); setAnimState('idle'); }
+  resetSleepTimer();
+});
+
+document.getElementById('zone-head').addEventListener('mouseenter', () => {
+  hoverActive = true;
+  if (state === 'sleep') wakeUp();
+  stopZzz();
+  setAnimState('bounce');
+  resetSleepTimer();
+});
+document.getElementById('zone-head').addEventListener('click', () => {
+  showBubble();
+});
+document.getElementById('zone-head').addEventListener('mouseleave', () => {
+  hoverActive = false;
+  resetSleepTimer();
+});
+
+function onHandEnter() {
+  hoverActive = true;
+  if (state === 'sleep') wakeUp();
+  stopZzz();
+  setAnimState('dance');
+  resetSleepTimer();
+}
+function onHandLeave() { hoverActive = false; resetSleepTimer(); }
+document.getElementById('zone-hand-left').addEventListener('mouseenter', onHandEnter);
+document.getElementById('zone-hand-left').addEventListener('mouseleave', onHandLeave);
+document.getElementById('zone-hand-right').addEventListener('mouseenter', onHandEnter);
+document.getElementById('zone-hand-right').addEventListener('mouseleave', onHandLeave);
+
+// --- Body zone: cycle outfits ---
+const OUTFITS = [
+  { name: 'default', img: '/default.png', chat: { '累': '/tired.png', '饿了': '/hungry.png', '开心': '/happy.png', '无聊': '/bored.png', '天气': '/bored.png' } },
+  { name: 'dress1', img: '/dress.png', chat: { '累': '/dress_tired.png', '饿了': '/dress_hungry.png', '开心': '/dress_happy.png', '无聊': '/dress_frown.png', '天气': '/dress_bored.png' } },
+  { name: 'dress2', img: '/dress2.png', chat: { '累': '/dress2_tired.png', '饿了': '/dress2_hungry.png', '开心': '/dress2_happy.png', '无聊': '/dress2_frown.png', '天气': '/dress2_bored.png' } },
+  { name: 'dress3', img: '/dress3.png', chat: { '累': '/dress3_tired.png', '饿了': '/dress3_hungry.png', '开心': '/dress3_happy.png', '无聊': '/dress3_frown.png', '天气': '/dress3_bored.png' } },
+];
+let outfitIndex = 0;
+let isDressed = false;
+
+function getCurrentOutfit() { return OUTFITS[outfitIndex]; }
+
+document.getElementById('zone-body').addEventListener('click', () => {
+  if (state === 'sleep') wakeUp();
+  const img = kc.querySelector('.kitty-img');
+  outfitIndex = (outfitIndex + 1) % OUTFITS.length;
+  isDressed = outfitIndex !== 0;
+  const outfit = getCurrentOutfit();
+  img.src = outfit.img + '?t=' + Date.now();
+  const msgs = ['换上新衣服啦~ ✨', '看看这套好看吗~', '换个风格~'];
+  if (outfitIndex === 0) showBubbleText('换回普通装~');
+  else showBubbleText(msgs[outfitIndex - 1] || msgs[0]);
+  setAnimState('bounce');
+  resetSleepTimer();
+});
+
+function showBubbleText(text) {
+  if (bubbleEl) bubbleEl.remove();
+  const el = document.createElement('div');
+  el.className = 'bubble';
+  el.textContent = text;
+  wrap.appendChild(el);
+  bubbleEl = el;
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => { el.remove(); if (bubbleEl === el) bubbleEl = null; }, 300); }, 3000);
+}
+
+function showBubble() {
+  if (bubbleEl) bubbleEl.remove();
+  const el = document.createElement('div');
+  el.className = 'bubble';
+  el.textContent = getRandomMessage();
+  wrap.appendChild(el);
+  bubbleEl = el;
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => { el.remove(); if (bubbleEl === el) bubbleEl = null; }, 300); }, 3000);
+}
+
+function turnAround() {
+  walkDir *= -1;
+  facing = walkDir > 0 ? 'right' : 'left';
+  setClass('anim-walk');
+}
+function atEdge(side) { if (state === 'walking') turnAround(); }
+
+// --- Peek ---
+function setPeek(dir) {
+  peekDir = dir;
+  stopWalking(); stopZzz(); clearIdleTimer();
+  state = 'peek';
+  kc.className = '';
+  if (dir === 'right') kc.classList.add('peek-right');
+  else if (dir === 'left') kc.classList.add('peek-left');
+  else { peekDir = null; setAnimState('idle'); }
+}
+
+// --- Drag ---
+let dragging = false, sx = 0, sy = 0, moved = false;
+click.addEventListener('mousedown', (e) => {
+  if (e.button !== 0) return;
+  dragging = true; moved = false;
+  sx = e.screenX; sy = e.screenY;
+  if (peekDir) { msg('unpeek'); setPeek(null); }
+  if (state === 'walking') { stopWalking(); setAnimState('idle'); }
+  if (state === 'sleep') { wakeUp(); }
+});
+document.addEventListener('mousemove', (e) => {
+  if (!dragging) return;
+  const dx = e.screenX - sx, dy = e.screenY - sy;
+  if (Math.abs(dx) > 2 || Math.abs(dy) > 2) moved = true;
+  sx = e.screenX; sy = e.screenY;
+  if (moved) msg('drag', {dx, dy});
+});
+document.addEventListener('mouseup', () => {
+  if (dragging && moved) msg('dragEnd');
+  dragging = false;
+});
+click.addEventListener('click', (e) => { if (moved) e.stopImmediatePropagation(); }, true);
+
+document.querySelectorAll('.zone').forEach(z => {
+  z.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    dragging = true; moved = false;
+    sx = e.screenX; sy = e.screenY;
+    if (peekDir) { msg('unpeek'); setPeek(null); }
+  });
+});
+
+kc.addEventListener('mouseenter', () => {
+  if (peekDir) { msg('unpeek'); setPeek(null); }
+});
+
+// --- Right click menu ---
+kc.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  ctx.style.display = 'flex';
+  ctx.style.left = '85px';
+  ctx.style.top = '140px';
+  msg('menuOpen');
+});
+document.addEventListener('click', (e) => {
+  if (e.target.closest('#ctx') || e.target.closest('#chat-options')) return;
+  ctx.style.display = 'none';
+  if (chatVisible) { chatOpts.style.display = 'none'; chatVisible = false; }
+  msg('menuClose');
+});
+document.getElementById('ctxQuit').addEventListener('click', () => { msg('quit'); });
+document.getElementById('ctxChat').addEventListener('click', () => { ctx.style.display = 'none'; toggleChatOptions(); });
+document.getElementById('ctxSleep').addEventListener('click', () => { enterSleep(); });
+
+document.getElementById('ctxBallet').addEventListener('click', () => {
+  if (state === 'sleep') wakeUp();
+  showBubbleText('看我跳芭蕾~ 💃');
+  setAnimState('ballet');
+  setTimeout(() => { if (state === 'ballet') setAnimState('idle'); }, 5000);
+  resetSleepTimer();
+});
+
+let isBig = false;
+document.getElementById('ctxBig').addEventListener('click', () => {
+  isBig = !isBig;
+  msg(isBig ? 'resize' : 'resizeBack', { scale: 3.0 });
+  const s = 1/3;
+  if (isBig) {
+    ctx.style.transform = 'scale(' + s + ')';
+    ctx.style.transformOrigin = 'top left';
+  } else {
+    ctx.style.transform = '';
+  }
+  if (chatVisible) { chatOpts.style.display = 'none'; chatVisible = false; msg('menuClose'); }
+  document.getElementById('ctxBig').textContent = isBig ? '变小' : '变大';
+});
+
+let waterTimer = null;
+document.getElementById('ctxWater').addEventListener('click', () => {
+  if (waterTimer) {
+    clearInterval(waterTimer);
+    waterTimer = null;
+    showBubbleText('喝水提醒已关闭~');
+    document.getElementById('ctxWater').textContent = '喝水提醒';
+  } else {
+    showBubbleText('好的，每30分钟提醒你喝水~');
+    document.getElementById('ctxWater').textContent = '关闭喝水提醒';
+    waterTimer = setInterval(() => {
+      if (state === 'sleep') wakeUp();
+      showBubbleText('该喝水啦！💧');
+      setAnimState('bounce');
+    }, 30 * 60 * 1000);
+  }
+});
+
+// --- Chat options ---
+const chatOpts = document.getElementById('chat-options');
+let chatVisible = false;
+
+function toggleChatOptions() {
+  chatVisible = !chatVisible;
+  chatOpts.style.display = chatVisible ? 'flex' : 'none';
+  if (chatVisible && isBig) {
+    chatOpts.style.position = 'fixed';
+    chatOpts.style.bottom = 'auto';
+    chatOpts.style.left = '85px';
+    chatOpts.style.top = '175px';
+    chatOpts.style.transform = 'scale(' + (1/3) + ')';
+    chatOpts.style.transformOrigin = 'top left';
+    chatOpts.style.width = '150px';
+  } else {
+    chatOpts.style.position = 'absolute';
+    chatOpts.style.bottom = '2px';
+    chatOpts.style.left = '50%';
+    chatOpts.style.top = 'auto';
+    chatOpts.style.transform = 'translateX(-50%)';
+    chatOpts.style.transformOrigin = '';
+    chatOpts.style.width = '150px';
+  }
+  msg(chatVisible ? 'menuOpen' : 'menuClose');
+  resetSleepTimer();
+}
+
+document.querySelectorAll('#chat-options span').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const key = btn.dataset.key;
+    chatOpts.style.display = 'none';
+    chatVisible = false;
+    msg('menuClose');
+    const imgMap = getCurrentOutfit().chat;
+    if (imgMap[key]) {
+      const img = kc.querySelector('.kitty-img');
+      img.src = imgMap[key] + '?t=' + Date.now();
+      showBubbleText(getReply(key));
+      setAnimState('bounce');
+      setTimeout(() => { img.src = getDefaultImg(); }, 4000);
+    } else {
+      showBubbleText(getReply(key));
+      setAnimState('bounce');
+    }
+    resetSleepTimer();
+  });
+});
+
+function getReply(text) {
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  if (/累/.test(text)) return pick([
+    '辛苦啦~ 休息一下吧！', '累了就趴一会儿~',
+    '要不要喝杯奶茶犒劳自己？', '你已经很棒了，别太拼~',
+    '深呼吸，放松一下肩膀~'
+  ]);
+  if (/饿/.test(text)) return pick([
+    '加油，又要瘦啦！', '再忍忍，想想夏天的裙子！',
+    '喝杯水先顶一下~', '饿了就是在燃烧脂肪！',
+    '坚持住，马上就到饭点啦~', '要不吃个水果垫垫？'
+  ]);
+  if (/无聊/.test(text)) return pick([
+    '摸摸头，我陪你呀~', '要不要起来走走？',
+    '无聊就来撸猫吧~', '刷刷手机放松一下？',
+    '不如摸鱼看个视频？'
+  ]);
+  if (/开心/.test(text)) return pick([
+    '嘻嘻，开心就好~', '看你开心我也开心！',
+    '今天心情不错嘛~', '笑起来真好看！',
+    '开心的日子要记住哦~'
+  ]);
+  if (/天气/.test(text)) return weatherMsg || '今天记得看天气预报哦~';
+  return '喵~ 我听到了！';
+}
+
+// --- Time greetings ---
+(function greet() {
+  const h = new Date().getHours();
+  let m;
+  if (h >= 7 && h < 9) m = '早上好呀~';
+  else if (h >= 12 && h < 13) m = '该吃午饭啦！';
+  else if (h >= 18 && h < 19) m = '下班时间到~';
+  else if (h >= 22 || h < 6) m = '这么晚了，早点休息~';
+  if (m) setTimeout(() => {
+    if (bubbleEl) bubbleEl.remove();
+    const el = document.createElement('div');
+    el.className = 'bubble';
+    el.textContent = m;
+    wrap.appendChild(el);
+    bubbleEl = el;
+    setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 4000);
+  }, 3000);
+})();
+
+// --- Typing state (called from Swift) ---
+function startTyping() {
+  if (state === 'typing') return;
+  if (state === 'sleep') { stopZzz(); kc.querySelector('.kitty-img').src = getDefaultImg(); }
+  stopWalking(); stopZzz(); clearIdleTimer();
+  hoverActive = false;
+  setAnimState('typing');
+  resetSleepTimer();
+}
+function stopTyping() {
+  if (state !== 'typing') return;
+  kc.querySelector('.kitty-img').src = getDefaultImg();
+  setAnimState('idle');
+  resetSleepTimer();
+}
+
+scheduleIdle();
+resetSleepTimer();
+</script>
+</body>
+</html>
