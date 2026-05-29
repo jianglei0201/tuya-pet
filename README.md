@@ -5,7 +5,7 @@
 ## 一键安装
 
 ```bash
-git clone https://github.com/你的用户名/tuya-pet.git
+git clone https://github.com/jianglei0201/tuya-pet.git
 cd tuya-pet
 bash install.sh
 ```
@@ -17,6 +17,7 @@ bash install.sh
 - 🎨 **换装** — 点击身体切换 4 套衣服
 - 💬 **聊天** — 点击头部随机对话，右键菜单选择心情
 - 💃 **跳芭蕾** — 右键 → 跳芭蕾舞
+- - 🌀 **转圈** — 右键 → 转圈（3D 换装动画）
 - 😴 **睡觉** — 右键 → 睡觉（30秒无操作也会自动睡）
 - 🔍 **变大/变小** — 右键 → 变大（高清放大）
 - 💧 **喝水提醒** — 每 30 分钟提醒喝水
@@ -60,6 +61,8 @@ bash install.sh --images ~/我的图片/
 - macOS 12+
 - Xcode Command Line Tools（`xcode-select --install`）
 - Node.js（`brew install node`）
+> **首次打开提示"无法验证开发者"？**
+> 右键点击 `TuyaPet.app` → 选择「打开」→ 再点「打开」即可。只需操作一次，之后双击正常打开。
 
 ## 卸载
 
