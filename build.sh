@@ -30,12 +30,18 @@ rm -rf "$BUNDLE"
 mkdir -p "$BUNDLE/Contents/MacOS"
 mkdir -p "$BUNDLE/Contents/Resources"
 
-# Compile Swift
+# Compile Swift — patch node path at build time so it works on any machine
+NODE_BIN=$(which node)
+echo "  📍 Node.js: $NODE_BIN"
+PATCHED_SWIFT="/tmp/tuya_pet_app_$$.swift"
+sed "s|__NODE_PATH__|$NODE_BIN|g" "$SRC_DIR/app.swift" > "$PATCHED_SWIFT"
+
 echo "  ⚙️  编译 app.swift..."
-swiftc "$SRC_DIR/app.swift" \
+swiftc "$PATCHED_SWIFT" \
   -framework Cocoa \
   -framework WebKit \
   -o "$BUNDLE/Contents/MacOS/$APP_NAME"
+rm -f "$PATCHED_SWIFT"
 
 # Copy resources into MacOS (server.js runs from same dir)
 echo "  📄 复制资源文件..."
