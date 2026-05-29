@@ -246,7 +246,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, NSWi
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/bash")
-        process.arguments = ["-c", "cd '\(appDir)' && PATH=/Users/jianglei/.local/bin:/usr/local/bin:/opt/homebrew/bin:$PATH node server.js"]
+        process.arguments = ["-c", "cd '\(appDir)' && __NODE_PATH__ server.js"]
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
         do {
