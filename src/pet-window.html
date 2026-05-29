@@ -221,6 +221,29 @@ html, body { background: transparent; overflow: hidden; user-select: none; -webk
   to { background-position: -1080px 0; }
 }
 
+.anim-spin3 .kitty-img {
+  visibility: hidden;
+}
+.anim-spin3 .spin3-sprite {
+  display: block;
+}
+.spin3-sprite {
+  display: none;
+  position: absolute;
+  top: -4px; left: 0;
+  width: 72px;
+  height: 128px;
+  background: url('/spin3_sprite.png') 0 0 no-repeat;
+  background-size: 1440px 128px;
+  animation: spin3Sprite 3s steps(20) infinite;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.18));
+}
+@keyframes spin3Sprite {
+  from { background-position: 0 0; }
+  to { background-position: -1440px 0; }
+}
+
 .anim-rest .kitty-img {
   animation: restBody 4s ease-in-out infinite;
 }
@@ -371,6 +394,7 @@ html, body { background: transparent; overflow: hidden; user-select: none; -webk
     <div class="walk-sprite"></div>
     <div class="sleep-sprite"></div>
     <div class="ballet-sprite"></div>
+    <div class="spin3-sprite"></div>
     <div id="kitty-click"></div>
     <div id="zone-head" class="zone"></div>
     <div id="zone-hand-left" class="zone"></div>
@@ -383,6 +407,7 @@ html, body { background: transparent; overflow: hidden; user-select: none; -webk
 <div id="ctx">
   <div id="ctxChat">聊天</div>
   <div id="ctxBallet">跳芭蕾舞</div>
+  <div id="ctxSpin3">转圈</div>
   <div id="ctxSleep">睡觉</div>
   <div id="ctxBig">变大</div>
   <div id="ctxWater">喝水提醒</div>
@@ -583,6 +608,12 @@ function setAnimState(s) {
     spriteEl.style.animation = 'none';
     spriteEl.offsetHeight;
     spriteEl.style.animation = '';
+  } else if (s === 'spin3') {
+    setClass('anim-spin3');
+    const spriteEl = kc.querySelector('.spin3-sprite');
+    spriteEl.style.animation = 'none';
+    spriteEl.offsetHeight;
+    spriteEl.style.animation = '';
   }
 }
 
@@ -748,7 +779,7 @@ kc.addEventListener('contextmenu', (e) => {
   e.preventDefault();
   ctx.style.display = 'flex';
   ctx.style.left = '85px';
-  ctx.style.top = '140px';
+  ctx.style.top = '30px';
   msg('menuOpen');
 });
 document.addEventListener('click', (e) => {
@@ -766,6 +797,14 @@ document.getElementById('ctxBallet').addEventListener('click', () => {
   showBubbleText('看我跳芭蕾~ 💃');
   setAnimState('ballet');
   setTimeout(() => { if (state === 'ballet') setAnimState('idle'); }, 5000);
+  resetSleepTimer();
+});
+
+document.getElementById('ctxSpin3').addEventListener('click', () => {
+  if (state === 'sleep') wakeUp();
+  showBubbleText('转圈圈~ 🌀');
+  setAnimState('spin3');
+  setTimeout(() => { if (state === 'spin3') setAnimState('idle'); }, 6000);
   resetSleepTimer();
 });
 
